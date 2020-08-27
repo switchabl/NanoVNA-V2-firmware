@@ -903,7 +903,7 @@ static void measurement_setup() {
 }
 
 static void adc_process() {
-	if(!outputRawSamples) {
+	if(sweep_enabled && !outputRawSamples) {
 		volatile uint16_t* buf;
 		int len;
 		for(int i=0; i<2; i++) {
@@ -1563,6 +1563,12 @@ namespace UIActions {
 
 	void toggle_sweep(void) {
 		sweep_enabled = !sweep_enabled;
+
+		// output CW signal while sweep is paused
+		if (!sweep_enabled)
+			rfsw(RFSW_ECAL, RFSW_ECAL_NORMAL);
+		else
+			vnaMeasurement.resetSweep();
 	}
 	void enable_refresh(bool enable) {
 		sweep_enabled = enable;
