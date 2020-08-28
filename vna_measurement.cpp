@@ -58,18 +58,37 @@ void VNAMeasurement::sweepAdvance() {
 	}
 }
 
+void VNAMeasurement::sweepPause(bool pause) {
+	if (pause) {
+		sweepPauseRequested = true;
+	} else {
+		sweepPauseRequested = false;
+		resetSweep();
+		__sync_synchronize();
+		setMeasurementPhase(VNAMeasurementPhases::REFERENCE);
+	}
+
+}
+
 void VNAMeasurement::sampleProcessor_emitValue(int32_t valRe, int32_t valIm, bool clipped) {
+	if (sweepPauseRequested) {
+		setMeasurementPhase(VNAMeasurementPhases::PAUSED);
+		sweepPauseRequested = false;
+	}
+
 	auto currPoint = sweepCurrPoint;
 	if(currPoint == -1) {
 		freqHz_t start = sweepStartHz;
 		freqHz_t stop = start + sweepStepHz*sweepPoints;
 		sweepSetupChanged(start, stop);
 		dpCounterSynth = 0;
-		setMeasurementPhase(VNAMeasurementPhases::REFERENCE);
+		if (measurementPhase != VNAMeasurementPhases::PAUSED)
+			setMeasurementPhase(VNAMeasurementPhases::REFERENCE);
 		sweepAdvance();
 		periodCounterSynth *= 2;
 		return;
 	}
+
 	if(periodCounterSynth > 0) {
 		// still waiting for synthesizer
 		periodCounterSynth--;
@@ -77,6 +96,10 @@ void VNAMeasurement::sampleProcessor_emitValue(int32_t valRe, int32_t valIm, boo
 		gainChangeOccurred = false;
 		return;
 	}
+
+	if (measurementPhase == VNAMeasurementPhases::PAUSED)
+		return;
+
 	if(periodCounterSwitch >= nWaitSwitch) {
 		currDP += complexi{valRe, valIm};
 

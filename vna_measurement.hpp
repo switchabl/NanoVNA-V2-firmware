@@ -11,7 +11,9 @@ enum class VNAMeasurementPhases {
 
 	ECALLOAD,
 	ECALSHORT,
-	ECALTHRU
+	ECALTHRU,
+
+	PAUSED
 };
 
 // implements sweep, rf switch timing, and dsp for single-receiver
@@ -47,6 +49,9 @@ public:
 
 	// same as clipFlag, but for S21
 	bool clipFlag2 = false;
+
+	// sweep should be paused at next measurement
+	volatile bool sweepPauseRequested = false;
 
 	// called when a new data point is available.
 	// ecal is load, short, thru.
@@ -127,6 +132,7 @@ public:
 
 	void setMeasurementPhase(VNAMeasurementPhases ph);
 	void sweepAdvance();
+	void sweepPause(bool pause);
 	void sampleProcessor_emitValue(int32_t valRe, int32_t valIm, bool clipped);
 	void doEmitValue(bool ecal);
 };
