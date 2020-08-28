@@ -109,6 +109,8 @@ static FIFO<small_function<void()>, 8> eventQueue;
 
 static volatile bool usbDataMode = false;
 
+static volatile bool refreshEnabled = true;
+
 static freqHz_t currFreqHz = 0;		// current hardware tx frequency
 static int currThruGain = 0;		// gain setting used for this thru measurement
 
@@ -1312,7 +1314,7 @@ int main(void) {
 		// when we are in USB mode.
 		myassert(!usbDataMode);
 
-		if(sweep_enabled) {
+		if(sweep_enabled && refreshEnabled) {
 			if(processDataPoint()) {
 				// a full sweep has completed
 				if ((domain_mode & DOMAIN_MODE) == DOMAIN_TIME) {
@@ -1326,7 +1328,7 @@ int main(void) {
 
 		// if we have no pending events, use idle cycles to refresh the graph
 		if(!eventQueue.readable()) {
-			if(sweep_enabled) {
+			if(sweep_enabled && refreshEnabled) {
 				if((domain_mode & DOMAIN_MODE) == DOMAIN_FREQ) {
 					plot_into_index(measured);
 					ui_marker_track();
@@ -1571,7 +1573,7 @@ namespace UIActions {
 			vnaMeasurement.resetSweep();
 	}
 	void enable_refresh(bool enable) {
-		sweep_enabled = enable;
+		refreshEnabled = enable;
 	}
 
 
