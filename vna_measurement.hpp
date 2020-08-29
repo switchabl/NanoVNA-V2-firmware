@@ -50,8 +50,9 @@ public:
 	// same as clipFlag, but for S21
 	bool clipFlag2 = false;
 
-	// sweep should be paused at next measurement
+	// sweep should be paused/unpaused at next measurement
 	volatile bool sweepPauseRequested = false;
+	volatile bool sweepUnpauseRequested = false;
 
 	// called when a new data point is available.
 	// ecal is load, short, thru.

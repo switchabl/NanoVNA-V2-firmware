@@ -56,24 +56,33 @@ void VNAMeasurement::sweepAdvance() {
 		periodCounterSynth *= 2;
 		currGain = gainMax;
 	}
+
+
+	if (sweepPauseRequested) {
+		setMeasurementPhase(VNAMeasurementPhases::PAUSED);
+		sweepPauseRequested = false;
+	}
+
 }
 
 void VNAMeasurement::sweepPause(bool pause) {
 	if (pause) {
+		sweepUnpauseRequested = false;
+		__sync_synchronize();
 		sweepPauseRequested = true;
 	} else {
 		sweepPauseRequested = false;
-		resetSweep();
 		__sync_synchronize();
-		setMeasurementPhase(VNAMeasurementPhases::REFERENCE);
+		sweepUnpauseRequested = true;
 	}
 
 }
 
 void VNAMeasurement::sampleProcessor_emitValue(int32_t valRe, int32_t valIm, bool clipped) {
-	if (sweepPauseRequested) {
-		setMeasurementPhase(VNAMeasurementPhases::PAUSED);
-		sweepPauseRequested = false;
+	if (sweepUnpauseRequested) {
+		if (measurementPhase == VNAMeasurementPhases::PAUSED)
+			setMeasurementPhase(VNAMeasurementPhases::REFERENCE);
+		sweepUnpauseRequested = false;
 	}
 
 	auto currPoint = sweepCurrPoint;
