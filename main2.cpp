@@ -577,6 +577,11 @@ static void cmdReadFIFO(int address, int nValues) {
 	if(!usbDataMode)
 		enterUSBDataMode();
 
+	if (!sweep_enabled) {
+		sweep_enabled = true;
+		vnaMeasurement.sweepPause(false);
+	}
+
 	for(int i=0; i<nValues;) {
 		int rdRPos = usbTxQueueRPos;
 		int rdWPos = usbTxQueueWPos;
